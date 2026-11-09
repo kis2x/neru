@@ -8,6 +8,7 @@
 #include "wlr_protocol/xdg-shell.h"
 
 #include <cairo/cairo.h>
+#include <errno.h>
 #include <math.h>
 #include <poll.h>
 #include <stdio.h>
@@ -1266,6 +1267,12 @@ int neru_wayland_overlay_poll(NeruWaylandOverlay *overlay) {
 	struct pollfd pfd = {.fd = wl_display_get_fd(display), .events = POLLIN, .revents = 0};
 
 	int ret = poll(&pfd, 1, 0);
+	// A signal may interrupt poll without invalidating the Wayland connection.
+	if (ret < 0 && errno == EINTR) {
+		wl_display_cancel_read(display);
+		return 0;
+	}
+
 	if (ret > 0 && (pfd.revents & POLLIN)) {
 		if (wl_display_read_events(display) < 0)
 			ret = -1;

@@ -154,6 +154,10 @@ func (o *wlrootsOverlay) keyboardPoller() {
 				o.renderMu.Unlock()
 			}
 
+			if o.logger != nil {
+				o.logger.Error("Wayland keyboard reader stopped after a native polling failure")
+			}
+
 			return
 		}
 

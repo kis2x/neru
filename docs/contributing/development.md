@@ -77,6 +77,7 @@ gofumpt and golines are optional, through `go install`.
 | `just install [-y]` | Build, `dist`, then run the release installer, `-y` auto-accepts |
 | `just test` | Unit + integration, desktop-safe |
 | `just test-unit`, `test-integration` | One tier only, desktop-safe |
+| `just test-wayland-poll` | Linux native polling regression, no display or input devices needed |
 | `just test-desktop` | Integration including the tests that drive the real cursor, keyboard and overlays |
 | `just test-foundation` | Fast cross-platform-safe slice, CI runs it too |
 | `just test-race`, `test-race-unit`, `test-race-integration` | The same tiers with `-race` |
@@ -208,6 +209,10 @@ are in the [Linux setup guide](../guide/linux.md).
 | Contract | ports and adapters agree on error semantics such as `CodeNotSupported` | `*_test.go`, an OS tag where needed | `just test-unit` |
 | Integration | real OS behavior | `*_integration_<os>_test.go`, `integration && <os>` | `just test-integration` |
 | Architecture | the guardrails in `internal/architecture/`, from package boundaries to generated docs, indexed in [doc.go](../../internal/architecture/doc.go) | `*_test.go`, none | `just test-unit` |
+
+On Linux, `just test-unit` also runs the native C polling regression via
+`just test-wayland-poll`, so both `just test` and CI's `just test-ci` cover it.
+It uses the Linux build dependencies above and skips on macOS and Windows.
 
 When you stub a platform feature, update the subsystem's contract test, or
 write one if a caller could read the stub's `nil` as success

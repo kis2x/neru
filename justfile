@@ -251,9 +251,25 @@ test: test-unit test-integration
 # test-ci is a composition of other recipes and never invokes `go test`
 # itself, so there is no seam between the two audiences to hang a switch on.
 [doc('Run the unit tests.')]
-test-unit:
+test-unit: test-wayland-poll
     @echo "Running unit tests..."
     go test ./...
+
+[doc('Run the Wayland polling regression test on Linux without a display.')]
+test-wayland-poll:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "{{ os() }}" != "linux" ]]; then
+        echo "Skipping Wayland polling test (Linux only)"
+        exit 0
+    fi
+    test_binary=$(mktemp "${TMPDIR:-/tmp}/neru-wayland-poll.XXXXXX")
+    trap 'rm -f "$test_binary"' EXIT
+    # Discard unused functions from the included production C file.
+    ${CC:-cc} -O2 -UNDEBUG -ffunction-sections -fdata-sections \
+        tests/wayland-overlay-poll.c $(pkg-config --cflags --libs wayland-client cairo xkbcommon) \
+        -Wl,--gc-sections -o "$test_binary"
+    "$test_binary"
 
 # Run the cross-platform-safe test slice: every package that contains no
 # platform-tagged source at all, so its behavior is identical on macOS, Linux
